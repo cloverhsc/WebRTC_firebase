@@ -1,0 +1,16 @@
+<h2>Client page only get remote streaming.</h2>
+<h4>My ID: {{myId}}</h4>
+<video id="remoteStream" autoplay playsinline></video>
+<button (click)="showRemoteStream()" type="button" mat-raised-button color="primary">Watch</button>
+
+<br>
+<p>setLocalDescription</p>
+<textarea id="localDescription"></textarea>
+<br>
+<p>offer content</p>
+<textarea id="offer"></textarea>
+
+<p>onaddstream event</p>
+<textarea id="onaddstream"></textarea>
+
+<textarea id='err'></textarea>
