@@ -1,7 +1,7 @@
 <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" id="profileForm">
   <div>
       <img [src]="avatarUrl? avatarUrl : 'assets/photo.png'"
-      alt="Nurse's avatar" id="avatar"/>
+      alt="User's avatar" id="avatar"/>
       <input type="file" name="avatarfile" accept="image/*" class="none"
       id="avatarfile" (change)="handleFileInput($event.target.files)">
   </div>

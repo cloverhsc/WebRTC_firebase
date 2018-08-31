@@ -128,11 +128,11 @@ export class ProfileComponent implements OnInit {
   }
 
   onSubmit() {
-    console.log(`Original name: ${this.name}`);
+    /* console.log(`Original name: ${this.name}`);
     console.log(`New name: ${this.profileForm.value.name}`);
     console.log(`Original Email: ${this.email}`);
     console.log(`Now Email: ${this.profileForm.value.email}`);
-    console.log(this.profileForm.value.avatar);
+    console.log(this.profileForm.value.avatar); */
 
     // update name if name is not the same.
     const newName = this.profileForm.value.name;
@@ -144,19 +144,15 @@ export class ProfileComponent implements OnInit {
 
       this.storage = firebase.app().storage('gs://webrtc-testconn.appspot.com');
       const storageRef = this.storage.ref();
-      const uploadTask = storageRef.child(`avatars/${this.uuid}`)
+      const uploadTask = storageRef.child(`avatars/${this.email}/avatar`)
         .put(this.profileForm.value.avatar, this.metadata);
       uploadTask.on('state_changed', (snapshot: firebase.storage.UploadTaskSnapshot) => {
         const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
         console.log(`Upload is ${progress} % done`);
-        /* switch (snapshot.state) {
-          case firebase.storage.TaskState.RUNNING:
-            console.log('Upload isa running');
-            break;
-        } */
         if (snapshot.state === firebase.storage.TaskState.RUNNING) {
           console.log('Upload is running');
         }
+        console.log(snapshot.metadata.contentType);
       },
         err => console.log(err),
         () => {
