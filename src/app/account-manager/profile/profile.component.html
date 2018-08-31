@@ -1,0 +1,33 @@
+<form [formGroup]="profileForm" (ngSubmit)="onSubmit()" id="profileForm">
+  <div>
+      <img [src]="avatarUrl? avatarUrl : 'assets/photo.png'"
+      alt="Nurse's avatar" id="avatar"/>
+      <input type="file" name="avatarfile" accept="image/*" class="none"
+      id="avatarfile" (change)="handleFileInput($event.target.files)">
+  </div>
+  <div>
+    <mat-form-field>
+    <input type="email" name="email"
+    matInput placeholder="Email" value="{{email}}" disabled>
+    </mat-form-field>
+  </div>
+  <div>
+    <mat-form-field>
+    <input type="text" name="name"
+    matInput placeholder="Name" value="{{name}}"
+    formControlName="name">
+    </mat-form-field>
+  </div>
+
+  <button type="submit" mat-raised-button color="primary">
+    Save
+  </button>
+
+  <button type="button" mat-raised-button color="primary"
+  routerLink="/webrtc">
+    Cancel
+  </button>
+
+</form>
+<p *ngIf="errorCode" >Error Code: {{errorCode}}</p>
+<p *ngIf="errorMessage" >Error Message: {{errorMessage}}</p>

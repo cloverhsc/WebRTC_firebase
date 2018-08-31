@@ -1,6 +1,11 @@
 {
   "rules": {
-    ".read": true,
-    ".write": true
+    "users": {
+      "$uid": {
+        ".read": "$uid === auth.uid && auth!= null",
+        ".write": "$uid === auth.uid && auth!= null",
+        ".validate": "newData.hasChildren(['name', 'email', 'avatar']) && newData.child('email').isString() && newData.child('name').isString() && newData.child('avatar').isString()"
+      }
+    }
   }
 }

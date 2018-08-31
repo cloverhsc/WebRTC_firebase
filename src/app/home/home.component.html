@@ -1,0 +1,30 @@
+<form [formGroup]="RegOrSignIn" (ngSubmit)="onSubmit()" >
+  <div>
+    <mat-form-field>
+      <input type="email" name="email" matInput
+      formControlName="email" placeholder="Email" />
+    </mat-form-field>
+  </div>
+  <div>
+    <mat-form-field>
+      <input type="password" name="password" matInput
+      formControlName="passwd" placeholder="Password" />
+    </mat-form-field>
+  </div>
+
+  <button type="submit" mat-raised-button color="primary">Sign In</button>
+  <button type="button" mat-raised-button color="primary"
+  (click)="Register()">Register</button>
+</form>
+
+<button (click)="signInWithGoogle()" mat-raised-button
+  color="primary">Sign in with Google</button>
+<button (click)="signInWithFB()" mat-raised-button
+  color="primary">Sign in with FaceBook</button>
+
+<p *ngIf="errorCode">Error Code: {{ errorCode }}</p>
+<p *ngIf="errorMessage">Error Code: {{ errorMessage }}</p>
+
+<button mat-raised-button color="primary"
+  (click)="checkStatus()">Check status</button>
+
