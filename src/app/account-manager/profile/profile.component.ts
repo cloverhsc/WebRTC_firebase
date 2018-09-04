@@ -103,7 +103,7 @@ export class ProfileComponent implements OnInit {
       // check empty file, check image file.
     if (files.length !== 0) {
       if (files[0].type === 'image/png' || files[0].type === 'image/jpeg') {
-        if (files[0].size < 1000000) {
+        if (files[0].size < 1 * 1024 * 1024) {
           // handler new avatar
           this.profileForm.patchValue({
             avatar: files[0]
@@ -142,10 +142,11 @@ export class ProfileComponent implements OnInit {
 
     if (this.isNewAvatar === true) {
 
-      this.storage = firebase.app().storage('gs://webrtc-testconn.appspot.com');
+      this.storage = firebase.storage();
       const storageRef = this.storage.ref();
-      const uploadTask = storageRef.child(`avatars/${this.email}/avatar`)
+      const uploadTask = storageRef.child(`avatars/${this.uuid}/avatar`)
         .put(this.profileForm.value.avatar, this.metadata);
+
       uploadTask.on('state_changed', (snapshot: firebase.storage.UploadTaskSnapshot) => {
         const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
         console.log(`Upload is ${progress} % done`);
