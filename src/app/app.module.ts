@@ -1,3 +1,4 @@
+import { MiscellanyModule } from './miscellany/miscellany.module';
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import { ReactiveFormsModule} from '@angular/forms';
@@ -45,7 +46,8 @@ import { HomeComponent } from './home/home.component';
     AngularFireStorageModule,  // imports firebase/storage only needed for storage features
     ViewerModule,
     RemotecameraModule,
-    AccountManagerModule
+    AccountManagerModule,
+    MiscellanyModule
   ],
   providers: [],
   bootstrap: [AppComponent]

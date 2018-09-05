@@ -1,3 +1,4 @@
+import { TrycodeComponent } from './miscellany/trycode/trycode.component';
 import { ProfileComponent } from './account-manager/profile/profile.component';
 import { RemotecameraComponent } from './remotecamera/remotecamera/remotecamera.component';
 import { ViewerComponent } from './viewer/viewer/viewer.component';
@@ -14,7 +15,7 @@ const routes: Routes = [
     canActivate: [AuthenService]
   },
   { path: '', component: HomeComponent},
-  {
+ /*  {
     path: 'viewer',
     component: ViewerComponent,
     canActivate: [AuthenService]
@@ -29,7 +30,11 @@ const routes: Routes = [
     component: ProfileComponent,
     canActivate: [AuthenService]
   },
-  { path: '**', component: HomeComponent}
+  {
+    path: 'miscellany',
+    component: TrycodeComponent
+  }, */
+  // { path: '**', component: HomeComponent}
 ];
 
 @NgModule({
