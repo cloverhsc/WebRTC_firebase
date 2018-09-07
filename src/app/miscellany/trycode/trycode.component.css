@@ -1,0 +1,60 @@
+.screenshotIMG {
+  display: none;
+}
+
+.matselect {
+  height: 40px;
+  width: 30%;
+}
+
+.none {
+  display: none;
+}
+
+.show {
+  display: initial;
+}
+
+.normal {
+  filter: none;
+}
+
+.blur {
+  filter: blur(30px);
+}
+
+.brightness {
+  filter: brightness(30%);
+}
+
+.contrast {
+  filter: contrast(200%);
+}
+
+.grayscale {
+  filter: grayscale(100%);
+}
+
+.invert {
+  filter: invert(100%);
+}
+
+.opacity {
+  filter: opacity(30%);
+}
+
+.saturate {
+  filter: saturate(50%);
+}
+
+.sepia {
+  filter: sepia(100%);
+}
+
+.hue-rotate {
+  filter: hue-rotate(90deg);
+}
+
+button {
+  margin: 0 10px;
+}

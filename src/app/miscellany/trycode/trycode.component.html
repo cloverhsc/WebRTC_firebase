@@ -1,6 +1,6 @@
 <h4>Test WebRTC</h4>
 <!-- <video id="video" autoplay></video> -->
-<div class="select">
+<!-- <div class="select">
   <label for="audioSource">Audio source: </label>
   <select id="audioSource"></select>
 </div>
@@ -8,6 +8,46 @@
 <div class="select">
   <label for="videoSource">Video source: </label>
   <select id="videoSource"></select>
-</div>
+</div> -->
+  <div>
+    <mat-select placeholder="Audio source" class="matselect"
+    id="audioSource" [(value)]="audioValue">
+      <mat-option *ngFor="let item of audioOption" [value]="item.value">
+        {{item.text}}
+      </mat-option>
+    </mat-select>
+  </div>
+  <div>
+    <mat-select placeholder="Video Source" class="matselect"
+    id="videoSource" [(value)]="videoValue">
+      <mat-option *ngFor="let item of videoOption" [value]="item.value">
+        {{item.text}}
+      </mat-option>
+    </mat-select>
+  </div>
 
 <video id="video" autoplay></video>
+
+<p><button class="capture-button" id="capture-button"
+type="button" mat-raised-button color="primary"
+(click)="captureVideoBtn()">
+  Capture video
+</button>
+<button class="stop-button" id="stopbtn"
+type="button" mat-raised-button color="primary"
+(click)="stopBtn()">
+  Stop
+</button></p>
+
+<p><button id="screenshot-button" (click)="screenshotBtn()"
+  type="button" mat-raised-button color="primary">
+    Take screenshot
+  </button>
+  <button class="cssfilters-apply" id="cssfilters-apply"
+  type="button" mat-raised-button color="primary"
+  (click)="cssFiltersBtn()">
+    Apply CSS filter
+</button></p>
+
+<canvas class="screenshotIMG" id="canvasArea"></canvas>
+<img [src]="imgUrl" class="none">
