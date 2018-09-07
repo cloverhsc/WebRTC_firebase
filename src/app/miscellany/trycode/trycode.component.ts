@@ -192,8 +192,19 @@ export class TrycodeComponent implements OnInit {
 
   stopBtn() {
     if (this.videoElement.srcObject) {
-      this.videoElement.srcObject = null;
+      (<MediaStream>this.videoElement.srcObject).getTracks()
+      .forEach( stream => stream.stop());
     }
   }
 
+  Test() {
+    navigator.mediaDevices.getUserMedia({ audio: true, video: true })
+      .then(stream => {
+        const videoDOM = <HTMLVideoElement>document.getElementById('video');
+        videoDOM.srcObject = stream;
+      })
+      .catch(err => console.log(err));
+  }
 }
+
+
