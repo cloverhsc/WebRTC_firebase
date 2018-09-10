@@ -208,6 +208,14 @@ export class TrycodeComponent implements OnInit {
       })
       .catch(err => console.log(err));
   }
+
+  Test1(val) {
+    console.log(val);
+  }
+
+  Test2(val) {
+    console.log(val);
+  }
 }
 
 
