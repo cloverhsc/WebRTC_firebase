@@ -1,15 +1,31 @@
 <h4>Test WebRTC</h4>
-<!-- <video id="video" autoplay></video> -->
-<!-- <div class="select">
-  <label for="audioSource">Audio source: </label>
-  <select id="audioSource"></select>
-</div>
+<section>
+  <label for="audioSelect">選擇Audio來源:</label>
+  <select id="audioSelect">
+    <option *ngFor="let item of audioOption" [value]="item.value">
+      {{item.text}}
+    </option>
+  </select>
+</section>
 
-<div class="select">
-  <label for="videoSource">Video source: </label>
-  <select id="videoSource"></select>
-</div> -->
-  <div>
+<section>
+  <label for="videoSelect">選擇Video來源:</label>
+  <select id="videoSelect">
+    <option *ngFor="let item of videoOption" [value]="item.value" >
+      {{item.text}}
+    </option>
+  </select>
+</section>
+
+<video id="video" autoplay></video>
+
+<button class="stop-button" id="stopbtn" type="button"
+(click)="stopBtn()">
+  Stop
+</button>
+
+
+  <!-- <div>
     <mat-select placeholder="Audio source" class="matselect"
     id="audioSource" [(value)]="audioValue">
       <mat-option *ngFor="let item of audioOption" [value]="item.value">
@@ -53,3 +69,5 @@ type="button" mat-raised-button color="primary"
 color="primary">Test something</button>
 <canvas class="screenshotIMG" id="canvasArea"></canvas>
 <img [src]="imgUrl" class="none">
+
+-->

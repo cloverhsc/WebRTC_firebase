@@ -190,6 +190,9 @@ export class TrycodeComponent implements OnInit {
     this.videoElement.className = filters[this.filterIndex++ % filters.length];
   }
 
+  /**
+   * 按鈕Stop的code.
+   */
   stopBtn() {
     if (this.videoElement.srcObject) {
       (<MediaStream>this.videoElement.srcObject).getTracks()
