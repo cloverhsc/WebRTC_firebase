@@ -12,7 +12,7 @@
 <section>
   <label for="videoSelect">選擇Video來源:</label>
   <select id="videoSelect"
-  (change)="ChangeVideoSource($event.target.vale)">
+  (change)="ChangeVideoSource($event.target.value)">
     <option *ngFor="let item of videoOption" [value]="item.value" >
       {{item.text}}
     </option>
