@@ -209,12 +209,14 @@ export class TrycodeComponent implements OnInit {
       .catch(err => console.log(err));
   }
 
-  Test1(val) {
-    console.log(val);
+  ChangeAudioSource(val) {
+    this.audioValue = val;
+    this.getStream();
   }
 
-  Test2(val) {
-    console.log(val);
+  ChangeVideoSource(val) {
+    this.videoValue = val;
+    this.getStream();
   }
 }
 

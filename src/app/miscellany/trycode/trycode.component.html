@@ -1,7 +1,8 @@
 <h4>Test WebRTC</h4>
 <section>
   <label for="audioSelect">選擇Audio來源:</label>
-  <select id="audioSelect" (change)="Test1($event.value)">
+  <select id="audioSelect"
+  (change)="ChangeAudioSource($event.target.value)">
     <option *ngFor="let item of audioOption" [value]="item.value">
       {{item.text}}
     </option>
@@ -10,7 +11,8 @@
 
 <section>
   <label for="videoSelect">選擇Video來源:</label>
-  <select id="videoSelect" (change)="Test2($event.value)">
+  <select id="videoSelect"
+  (change)="ChangeVideoSource($event.target.vale)">
     <option *ngFor="let item of videoOption" [value]="item.value" >
       {{item.text}}
     </option>
