@@ -126,6 +126,7 @@ export class TrycodeComponent implements OnInit {
 
     console.log(this.audioValue);
     console.log(this.videoValue);
+    this.stopBtn();   // stop stream first
     this.constraints = {
       audio: {
         deviceId: { exact: this.audioValue }
