@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { MiscellanyRoutingModule } from './miscellany-routing.module';
 import { TrycodeComponent } from './trycode/trycode.component';
 import { MatButtonModule, MatSelectModule, MatFormFieldModule } from '@angular/material';
+import { TryRTCPeerConnectionComponent } from './try-rtcpeer-connection/try-rtcpeer-connection.component';
 
 @NgModule({
   imports: [
@@ -13,6 +14,6 @@ import { MatButtonModule, MatSelectModule, MatFormFieldModule } from '@angular/m
     MatSelectModule,
     MatFormFieldModule
   ],
-  declarations: [TrycodeComponent]
+  declarations: [TrycodeComponent, TryRTCPeerConnectionComponent]
 })
 export class MiscellanyModule { }
