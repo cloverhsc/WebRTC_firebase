@@ -1,3 +1,5 @@
+import { SendMessageComponent } from './send-message/send-message.component';
+import { TryRtcdatachannelComponent } from './try-rtcdatachannel/try-rtcdatachannel.component';
 import { TryRTCPeerConnectionComponent } from './try-rtcpeer-connection/try-rtcpeer-connection.component';
 import { TrycodeComponent } from './trycode/trycode.component';
 import { NgModule } from '@angular/core';
@@ -8,6 +10,13 @@ const routes: Routes = [
     component: TrycodeComponent },
   { path: 'rtcconn',
     component: TryRTCPeerConnectionComponent
+  },
+  { path: 'exdata',
+    component: TryRtcdatachannelComponent
+  },
+  {
+    path: 'chatroom',
+    component: SendMessageComponent
   }
 ];
 

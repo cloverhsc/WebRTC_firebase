@@ -35,7 +35,7 @@ export class RemotecameraComponent implements OnInit {
     private element: ElementRef
   ) {
     this.el = this.element;
-    this.database = db.database.ref();
+    this.database = db.database.ref('tmp/');
   }
 
   ngOnInit() {

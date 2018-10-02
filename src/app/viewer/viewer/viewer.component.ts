@@ -33,7 +33,7 @@ export class ViewerComponent implements OnInit {
     public db: AngularFireDatabase
   ) {
     this.el = this.element;
-    this.database = db.database.ref();
+    this.database = db.database.ref('tmp');
   }
 
   ngOnInit() {

@@ -51,9 +51,9 @@ export class TryRTCPeerConnectionComponent implements OnInit {
     this.$hangupBtn = this.el.nativeElement.querySelector('#hangupButton');
 
     this.pc = new RTCPeerConnection(this.configuration);
-    this.pc.addEventListener('icecandidate', this.handleConnection);
+    this.pc.addEventListener('icecandidate', this.handleConnection.bind(this));
     this.pc.addEventListener('iceconnectionstatechange',
-    this.handleConnectionChange);
+    this.handleConnectionChange.bind(this));
 
   }
 
@@ -61,10 +61,13 @@ export class TryRTCPeerConnectionComponent implements OnInit {
     const peerConnection = event.target;
     const iceCandidate = event.candidate;
 
+    // console.log('------ ice target--------');
+    // console.warn(peerConnection);
+    // console.log('------ ice candidate -----');
+    // console.warn(iceCandidate);
     if (iceCandidate) {
       const newIceCandidate = new RTCIceCandidate(iceCandidate);
       const otherPeer = this.getOtherPeer(peerConnection);
-
       otherPeer.addIceCandidate(newIceCandidate)
         .then(() => {
           this.handleConnectionSuccess(peerConnection);
@@ -136,6 +139,69 @@ export class TryRTCPeerConnectionComponent implements OnInit {
     console.log(now, text);
   }
 
+  // Logs error when setting session description fails.
+  setSessionDescriptionError(error) {
+    this.trace('Failed to create session description: ' + error.toString());
+  }
+  // Logs success when setting session description.
+  setDescriptionSuccess(peerConnection, functionName) {
+    const peerName = this.getPeerName(peerConnection);
+    this.trace(`${peerName} ${functionName} complete.`);
+}
+  // Logs success when localDescription is set.
+  setLocalDescriptionSuccess(peerConnection) {
+    this.setDescriptionSuccess(peerConnection, 'setLocalDescription');
+  }
+
+  // Logs success when remoteDescription is set.
+  setRemoteDescriptionSuccess(peerConnection) {
+    this.setDescriptionSuccess(peerConnection, 'setRemoteDescription');
+  }
+
+  // Logs offer creation and sets peer connection session descriptions.
+  createdOffer(description) {
+    this.trace(`Offer from localPeerConnection:\n${description.sdp}`);
+
+    this.trace('localPeerConnection setLocalDescription start.');
+    this.localPeerConnection.setLocalDescription(description)
+      .then(() => {
+        this.setLocalDescriptionSuccess(this.localPeerConnection);
+      }).catch( err => this.setSessionDescriptionError(err));
+
+    this.trace('remotePeerConnection setRemoteDescription start.');
+    this.remotePeerConnection.setRemoteDescription(description)
+      .then(() => {
+        this.setRemoteDescriptionSuccess(this.remotePeerConnection);
+      }).catch( err => this.setSessionDescriptionError(err));
+
+    this.trace('remotePeerConnection createAnswer start.');
+    this.remotePeerConnection.createAnswer()
+      .then(answer => this.createdAnswer(answer))
+      .catch(err => this.setSessionDescriptionError(err));
+  }
+
+  // Logs answer to offer creation and sets peer connection session descriptions.
+  createdAnswer(description) {
+    this.trace(`Answer from remotePeerConnection:\n${description.sdp}.`);
+
+    this.trace('remotePeerConnection setLocalDescription start.');
+    this.remotePeerConnection.setLocalDescription(description)
+      .then(() => {
+        this.setLocalDescriptionSuccess(this.remotePeerConnection);
+      }).catch(err => {
+        console.warn('--------------');
+        this.setSessionDescriptionError(err);
+      });
+
+    this.trace('localPeerConnection setRemoteDescription start.');
+    this.localPeerConnection.setRemoteDescription(description)
+      .then(() => {
+        this.setRemoteDescriptionSuccess(this.localPeerConnection);
+      }).catch(err => {
+        this.setSessionDescriptionError(err);
+      });
+  }
+
   // Handles start button action: creates local MediaStream.
   startAction() {
     this.$startBtn.disabled = true;
@@ -169,26 +235,32 @@ export class TryRTCPeerConnectionComponent implements OnInit {
     this.trace('Created local peer connection object localPeerConnection.');
 
     this.localPeerConnection.addEventListener(
-      'icecandidate', this.handleConnection);
+      'icecandidate', this.handleConnection.bind(this));
     this.localPeerConnection.addEventListener(
-      'iceconnectionstatechange', this.handleConnectionChange);
+      'iceconnectionstatechange', this.handleConnectionChange.bind(this));
 
     this.remotePeerConnection = new RTCPeerConnection(servers);
     this.trace('Created remote peer connection object remotePeerConnection.');
 
     this.remotePeerConnection.addEventListener(
-      'icecandidate', this.handleConnection);
+      'icecandidate', this.handleConnection.bind(this));
     this.remotePeerConnection.addEventListener(
-      'iceconnectionstatechange', this.handleConnectionChange);
+      'iceconnectionstatechange', this.handleConnectionChange.bind(this));
     this.remotePeerConnection.addEventListener(
-      'addstream', this.gotRemoteMediaStream);
+      'addstream', this.gotRemoteMediaStream.bind(this));
 
     // Add local stream to connection and create offer to connect.
+    // addStream將會被棄用！
     this.localPeerConnection.addStream(this.localStream);
     this.trace('Added local stream to localPeerConnection.');
 
     this.trace('localPeerConnection createOffer start.');
-    this.localPeerConnection.createOffer(offerOptions)
-      .then(createdOffer).catch(setSessionDescriptionError);
+    // this.localPeerConnection.createOffer(this.offerOptions)
+    //   .then(this.createdOffer).catch(this.setSessionDescriptionError);
+
+    this.localPeerConnection.createOffer(this.offerOptions)
+    .then( describe => this.createdOffer(describe))
+    .catch( err => this.setSessionDescriptionError(err));
   }
+
 }
