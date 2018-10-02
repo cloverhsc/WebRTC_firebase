@@ -1,0 +1,20 @@
+<h1>Realtime communication with WebRTC</h1>
+
+<mat-form-field>
+  <textarea id="dataChannelSend" disabled matInput
+  placeholder="Press Start, enter some text, then press Send."></textarea>
+</mat-form-field>
+<br>
+<mat-form-field>
+  <textarea id="dataChannelReceive" matInput disabled></textarea>
+</mat-form-field>
+
+<div id="buttons">
+  <button id="startButton" type="button"
+  mat-raised-button color="primary" (click)="createConnection()">
+  Start</button>
+  <button id="sendButton" type="button" (click)="sendData()"
+  mat-raised-button color="primary">Send</button>
+  <button id="closeButton" type="button" (click)="closeDataChannels()"
+  mat-raised-button color="primary">Stop</button>
+</div>
