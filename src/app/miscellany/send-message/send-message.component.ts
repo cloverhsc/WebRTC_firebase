@@ -58,18 +58,6 @@ export class SendMessageComponent implements OnInit {
     this.getRoomList = new Promise((resolve, reject) => {
       const firedb = this.db.database.ref('tmp/');
       if (firedb) {
-        /* this.roomId_list = [];
-        firedb.once('value')
-          .then(datasnapshot => {
-            datasnapshot.forEach(data => {
-              if (data) {
-                console.log(data.key);
-                this.roomId_list.push(data.key);
-              }
-            });
-          }
-          ).catch(err => console.warn(err)); */
-
         firedb.on('value', datasnapshot => {
           this.roomId_list = [];
           datasnapshot.forEach(data => {
@@ -80,7 +68,6 @@ export class SendMessageComponent implements OnInit {
           });
         });
       }
-      console.log(this.roomId_list);
       resolve();
     });
   }
@@ -95,69 +82,11 @@ export class SendMessageComponent implements OnInit {
     this.joinButton = this.el.nativeElement.querySelector('#joinButton');
     this.inputRoomID = this.el.nativeElement.querySelector('#roomid');
 
-    // this.getRoomList.then(() => console.log(this.roomId_list));
+    this.getRoomList.then(() => console.log(this.roomId_list));
     this.roomidForm = this.fb.group({
       roomid: ['']
     });
 
-    // this.database.on('child_added', this.readMessage, this);
-
-    /* this.localConnection = new RTCPeerConnection(this.servers);
-    this.sendChannel = this.localConnection.createDataChannel('localSend');
-    this.localConnection.onicecandidate = (event) => {
-      console.log(event.candidate);
-      if (event.candidate) {
-        this.remoteConneciton.addIceCandidate(event.candidate);
-      }
-    };
-    this.localConnection.onopen = () => {
-      if (this.sendChannel.readyState === 'open') {
-        console.warn('Data Channel open!');
-      } else {
-        console.warn('Data Channel not open.');
-      }
-    };
-    this.localConnection.onclose = () => {
-      if (this.sendChannel.readyState === 'close') {
-        console.warn('Data Channel close!');
-      } else {
-        console.warn('Data Channel not close.');
-      }
-    };
-
-    this.remoteConneciton = new RTCPeerConnection(this.servers);
-    this.remoteConneciton.onicecandidate = (event) => {
-      console.log(event.candidate);
-      if (event.candidate) {
-        this.localConnection.addIceCandidate(event.candidate);
-      }
-    };
-    this.remoteConneciton.ondatachannel = (event) => {
-      console.log('Receive Channel Callback');
-      console.log(event);
-      this.receiveChannel = event.channel;
-      this.receiveChannel.onmessage = (evt) => {console.log(evt.data); };
-      this.receiveChannel.onopen = () => console.log(
-        `Receive Channel state is: ${this.receiveChannel.readyState}`);
-    };
-
-    this.localConnection.createOffer()
-      .then(desc => {
-        console.log(desc.sdp);
-        this.localConnection.setLocalDescription(desc);
-        console.log(this.localConnection.localDescription);
-        this.remoteConneciton.setRemoteDescription(desc);
-        this.remoteConneciton.createAnswer()
-        .then( desc2 => {
-          console.log('remoteConn create Answer');
-          console.log('desc2');
-          console.log(desc2);
-          this.remoteConneciton.setLocalDescription(desc2);
-          this.localConnection.setRemoteDescription(desc2);
-        })
-        .catch( err => console.warn(err));
-        // this.remoteConneciton.addIceCandidate(desc);
-      }); */
   }
 
   /**
@@ -173,31 +102,18 @@ export class SendMessageComponent implements OnInit {
     this.inputRoomID.disabled = true;
     this.localConnection = new RTCPeerConnection(this.servers);
     this.sendChannel = this.localConnection.createDataChannel('caller');
-    // this.localConnection.onicecandidate = this.iceCallback.bind(this);
-    // this.localConnection.onopen = () => {
-    //   if (this.sendChannel.readyState === 'open') {
-    //     console.warn('Data Channel open!');
-    //   } else {
-    //     console.warn('Data Channel not open.');
-    //   }
-    // };
-    // this.localConnection.onclose = () => {
-    //   if (this.sendChannel.readyState === 'close') {
-    //     console.warn('Data Channel close!');
-    //   } else {
-    //     console.warn('Data Channel not close.');
-    //   }
-    // };
 
     // EventHandler when the icecandidate event occurs.
-    this.localConnection.onicecandidate = this.iceCallback.bind(this);
+    this.localConnection.onicecandidate = this.callericeCallback.bind(this);
     this.sendChannel.onopen = this.onSendChannelStateChange.bind(this);
     this.sendChannel.onclose = this.onSendChannelStateChange.bind(this);
     this.localConnection.ondatachannel = this.receiveChannelCallback.bind(this);
     // Create offer.
     this.localConnection.createOffer()
     .then( desc => {
-      this.localConnection.setLocalDescription(desc);
+      console.log('set local description');
+      console.log(desc);
+      return this.localConnection.setLocalDescription(desc);
     })
     .then( () => this.sendMessage(
       this.myId,
@@ -215,8 +131,6 @@ export class SendMessageComponent implements OnInit {
   }
 
   callerReadMsg(data) {
-
-    console.log(data.val());
     if (data.val().sender !== this.myId) {
       if (data.val().sdp) {
         const sdpMsg = JSON.parse(data.val().sdp);
@@ -225,7 +139,6 @@ export class SendMessageComponent implements OnInit {
           this.localConnection.setRemoteDescription(
             new RTCSessionDescription(sdpMsg));
           console.log('Add callee sdp');
-          // this.caller_database.remove();
         }
       } else if (data.val().ice) {
         const iceMsg = JSON.parse(data.val().ice);
@@ -238,7 +151,7 @@ export class SendMessageComponent implements OnInit {
     }
   }
 
-  iceCallback(event) {
+  callericeCallback(event) {
     // 當有任何 ice candidate 可以用時，透過firebase database將
     // candidate 送給對方。
     console.log(`${window.performance.now() / 1000}` + event.candidate);
@@ -470,12 +383,19 @@ export class SendMessageComponent implements OnInit {
    * 2. remove id from firebase database in tmp/
    */
   closeDataChannels() {
-    const firedb = this.db.database.ref('tmp/' + this.myId);
-    if (firedb) {
-      firedb.remove()
-      .then(() => console.log(`Remove ${this.myId} successed`))
-      .catch( err => console.log(err));
-    }
+    console.log('Closing data channels');
+    this.sendChannel.close();
+    console.log(`Closed data channel with label: ${this.sendChannel.label}`);
+    this.receiveChannel.close();
+    console.log(`Closed data channel with label: ${this.receiveChannel.label}`);
+    this.localConnection.close();
+    console.log('Closed peer connections');
+    this.startButton.disabled = false;
+    this.sendButton.disabled = true;
+    this.closeButton.disabled = true;
+    this.dataChannelSend.value = '';
+    this.dataChannelReceive.value = '';
+    this.dataChannelSend.disabled = true;
   }
 
 }

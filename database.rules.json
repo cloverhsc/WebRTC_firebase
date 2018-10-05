@@ -6,6 +6,10 @@
         ".write": "$uid === auth.uid && auth!= null",
         ".validate": "newData.hasChildren(['name', 'email', 'avatar']) && newData.child('email').isString() && newData.child('name').isString() && newData.child('avatar').isString()"
       }
+    },
+    "tmp": {
+      ".read": true,
+      ".write": true
     }
   }
 }
