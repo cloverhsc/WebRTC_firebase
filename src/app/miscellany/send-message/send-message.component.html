@@ -8,9 +8,30 @@
   <textarea id="dataChannelReceive" matInput disabled></textarea>
 </mat-form-field>
 
+<h4> Your room ID: {{myId}} </h4>
 <div id="buttons">
   <button id="startButton" type="button" mat-raised-button color="primary" (click)="createConnection()">
-    Start</button>
+    Open Room</button>
   <button id="sendButton" type="button" (click)="sendData()" mat-raised-button color="primary">Send</button>
   <button id="closeButton" type="button" (click)="closeDataChannels()" mat-raised-button color="primary">Stop</button>
+</div>
+
+<br>
+
+<div>
+  <form [formGroup]="roomidForm" (ngSubmit)="joinChat()">
+    <mat-form-field>
+      <input matInput type="text" name="roomID" placeholder="room ID"
+      formControlName="roomid" id="roomid">
+    </mat-form-field>
+    <button id="joinButton" type="submit" mat-raised-button
+    color="primary">
+      Join
+    </button>
+
+    <h4>Room list:</h4>
+    <ul *ngIf="roomId_list.length > 0" >
+      <li *ngFor="let id of roomId_list " >{{id}}</li>
+    </ul>
+  </form>
 </div>

@@ -1,5 +1,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule } from '@angular/forms';
 
 import { MiscellanyRoutingModule } from './miscellany-routing.module';
 import { TrycodeComponent } from './trycode/trycode.component';
@@ -16,7 +17,8 @@ import { SendMessageComponent } from './send-message/send-message.component';
     MatButtonModule,
     MatSelectModule,
     MatFormFieldModule,
-    MatInputModule
+    MatInputModule,
+    ReactiveFormsModule
   ],
   declarations: [
     TrycodeComponent, TryRTCPeerConnectionComponent,
