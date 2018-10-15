@@ -104,7 +104,7 @@ export class MediaWDataComponent implements OnInit {
     this.GetUserMedia()
     .then( () => {
       this.localConnection = new RTCPeerConnection(this.servers);
-      this.localConnection.onicecandidate = this.SendIceCandidateEvent.bind(this);
+      this.localConnection.onicecandidate = this.SendCallerIceCandidateEvent.bind(this);
       this.localConnection.ontrack = this.addRemoteStreamEvent.bind(this);
 
       this.doCreateDataChannel();
@@ -121,7 +121,7 @@ export class MediaWDataComponent implements OnInit {
     })
     .catch( error => {
       this.initialBtn();
-      alert(error);
+      console.warn(error);
       return false;
     });
   }
@@ -130,7 +130,7 @@ export class MediaWDataComponent implements OnInit {
    * When get any ice candidate can be send to other peer.
    * upload to firebase database.
    */
-  SendIceCandidateEvent(event) {
+  SendCallerIceCandidateEvent(event) {
     if (event.candidate) {
       this.sendInfo(this.myId, event.candidate, 'ice');
     } else {
@@ -138,7 +138,19 @@ export class MediaWDataComponent implements OnInit {
     }
   }
 
+  SendCalleeIceCandidateEvent(event) {
+    if (event.candidate) {
+      this.callee_database.push({
+        sender: this.myId,
+        ice: JSON.stringify(event.candidate)
+      });
+    } else {
+      console.log('Sent all Ice already');
+    }
+  }
   addRemoteStreamEvent(event) {
+    console.log(`Add remote stream.....`);
+    console.log(event.stream);
     this.$remoteStream.srcObject = event.stream[0];
     this.$closeButton.disabled = false;
   }
@@ -167,7 +179,7 @@ export class MediaWDataComponent implements OnInit {
       this.caller_database = this.db.database.ref(this.DB_REF_NAME + this.myId);
       this.caller_database.on('child_added', this.callerReadMsg.bind(this));
     })
-    .catch( err => alert(err));
+      .catch(err => console.warn(err));
   }
 
   callerReadMsg(data) {
@@ -198,7 +210,7 @@ export class MediaWDataComponent implements OnInit {
     this.localConnection.createAnswer()
     .then( desc => this.localConnection.setLocalDescription(desc))
     .then( () => {
-      this.caller_database.push({
+      this.callee_database.push({
         sender: this.myId,
         sdp: JSON.stringify(this.localConnection.localDescription)
       }).then( () => {
@@ -207,7 +219,7 @@ export class MediaWDataComponent implements OnInit {
         this.$closeButton.disabled = false;
       });
     })
-    .catch( err => alert(err));
+      .catch(err => console.warn(err));
   }
 
   /**
@@ -227,8 +239,9 @@ export class MediaWDataComponent implements OnInit {
   onReceiveMsgChannelEvent(event) {
     console.log(`data channel created.`);
     const readyState = this.sendMsgChannel.readyState;
+    console.log(`receive msg channel status: ${readyState}`);
     this.receiveMsgChannel = event.channel;
-    this.receiveMsgChannel.onmessage = this.onReceiveMsgCallback(event.data);
+    this.receiveMsgChannel.onmessage = this.onReceiveMsgCallback.bind(this);
     this.receiveMsgChannel.onopen = this.onReceiveMsgChannelStateChange.bind(this);
     this.receiveMsgChannel.onclose = this.onReceiveMsgChannelStateChange.bind(this);
   }
@@ -245,14 +258,17 @@ export class MediaWDataComponent implements OnInit {
   /**
    * When receive message. show on text list zone.
    */
-  onReceiveMsgCallback(data: string) {
+  onReceiveMsgCallback(event) {
     console.log(`Received Message`);
+    console.log(event.data);
     const node = document.createElement('li');
-    const textnode = document.createTextNode(data);
-    node.appendChild(textnode);
-    this.$textList.appendChild(node);
-    this.$inputMsg.value = '';
-    this.$inputMsg.focus();
+    if (event.data) {
+      const textnode = document.createTextNode(event.data);
+      node.appendChild(textnode);
+      this.$textList.appendChild(node);
+      this.$inputMsg.value = '';
+      this.$inputMsg.focus();
+    }
   }
   /**
    * RTCDataChannel onopen event.
@@ -302,23 +318,25 @@ export class MediaWDataComponent implements OnInit {
     console.log(`room id: ${this.roomId}`);
     console.log(`my id: ${this.myId}`);
 
+    this.callee_database = this.db.database.ref(this.DB_REF_NAME + this.roomId);
+
+    this.localConnection = new RTCPeerConnection(this.servers);
+    this.localConnection.onicecandidate = this.SendCalleeIceCandidateEvent.bind(this);
+    this.localConnection.ontrack = this.addRemoteStreamEvent.bind(this);
+
     this.GetUserMedia()
     .then( () => {
-      this.localConnection = new RTCPeerConnection(this.servers);
-      this.localConnection.onicecandidate = this.SendIceCandidateEvent.bind(this);
-      this.localConnection.ontrack = this.addRemoteStreamEvent.bind(this);
 
       this.doCreateDataChannel();
 
       this.doCreateAnswerOffer();
     })
-    .catch( err => alert(err));
+    .catch( err => console.warn(err));
 
     // check room id exist or not.
     if (this.roomId) {
       if (this.roomId_list.includes(this.roomId)) {
         // get and add caller sdp.
-        this.callee_database = this.db.database.ref(this.DB_REF_NAME + this.roomId);
         if (this.callee_database) {
           this.callee_database.once('value').then(snapshot => snapshot.forEach(data => {
             if (data.val().sender !== this.myId) {
@@ -336,20 +354,20 @@ export class MediaWDataComponent implements OnInit {
                 const iceMsg = JSON.parse(data.val().ice);
                 console.log(`sender id: ${data.val().sender}`);
                 console.log(iceMsg);
-                this.localConnection.addIceCandidate( new RTCIceCandidate(iceMsg.ice))
+                this.localConnection.addIceCandidate( new RTCIceCandidate(iceMsg))
                 .then( () => console.log(`add caller ice candidate success`))
                 .catch( err => console.warn(`add caller ice candidate error: ${err}`));
               }
             }
           }));
         } else {
-          alert('Can not find this room information.');
+          console.warn('Can not find this room information.');
         }
       } else {
-        alert('Can not find this room.');
+        console.warn('Can not find this room.');
       }
     } else {
-      alert('Please input room id.');
+      console.warn('Please input room id.');
     }
   }
 
@@ -392,11 +410,11 @@ export class MediaWDataComponent implements OnInit {
     if (this.sendMsgChannel) {
       const msg = this.$inputMsg.value;
       if (this.sendMsgChannel.readyState === 'open') {
-        this.onReceiveMsgCallback(msg);
+        this.onReceiveMsgCallback({data: msg});
         this.sendMsgChannel.send(msg);
         console.log(`Send data: ${msg}`);
       } else {
-        this.onReceiveMsgCallback(msg);
+        this.onReceiveMsgCallback({ data: msg });
       }
     }
   }
