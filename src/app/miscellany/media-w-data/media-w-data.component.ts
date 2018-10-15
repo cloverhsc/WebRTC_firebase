@@ -41,6 +41,12 @@ export class MediaWDataComponent implements OnInit {
     audio: true,
     video: { width: 320, height: 240}
   };
+  private offerOpt = {
+    offerToReceiveAudio: 1,
+    offerToReceiveVideo: 1,
+    voiceActivityDetection: true,
+    iceRestart: true
+  };
   private servers = {
     'iceServers': [
       { 'urls': 'stun:stun.services.mozilla.com'},
@@ -101,17 +107,19 @@ export class MediaWDataComponent implements OnInit {
     this.$joinButton.disabled = true;
     this.$inputRoomID.disabled = true;
 
-    this.GetUserMedia()
-    .then( () => {
-      this.localConnection = new RTCPeerConnection(this.servers);
-      this.localConnection.onicecandidate = this.SendCallerIceCandidateEvent.bind(this);
-      this.localConnection.ontrack = this.addRemoteStreamEvent.bind(this);
+    this.localConnection = new RTCPeerConnection(this.servers);
+    this.localConnection.onicecandidate = this.SendCallerIceCandidateEvent.bind(this);
+    // this.localConnection.ontrack = this.addRemoteStreamEvent.bind(this);
+    this.localConnection.onaddstream = this.addRemoteStreamEvent.bind(this);
 
-      this.doCreateDataChannel();
+    this.doCreateDataChannel();
 
-      this.doCreateOffer();
+    this.doCreateOffer();
 
-    });
+    // this.GetUserMedia()
+    // .then( () => {
+
+    // });
   }
 
   GetUserMedia() {
@@ -149,7 +157,7 @@ export class MediaWDataComponent implements OnInit {
     }
   }
   addRemoteStreamEvent(event) {
-    console.log(`Add remote stream.....`);
+    console.warn(`Add remote stream.....`);
     console.log(event.stream);
     this.$remoteStream.srcObject = event.stream[0];
     this.$closeButton.disabled = false;
@@ -159,11 +167,15 @@ export class MediaWDataComponent implements OnInit {
    * create offer then send sdp to firebase database.
    */
   doCreateOffer() {
-    this.localConnection.createOffer()
+    this.localConnection.createOffer(this.offerOpt)
     .then( desc => {
       // set sdp to local description.
       console.log(`Set local sdp`);
       return this.localConnection.setLocalDescription(desc);
+    })
+    .then( () => {
+      navigator.mediaDevices.getUserMedia(this.mediaConstraints)
+      .then( stream => this.$localStream.srcObject = stream);
     })
     .then( () => {
       this.sendInfo(
@@ -189,7 +201,9 @@ export class MediaWDataComponent implements OnInit {
         const sdpMsg = JSON.parse(data.val().sdp);
         if (sdpMsg.type === 'answer' && sdpMsg.sdp) {
           this.localConnection.setRemoteDescription( new RTCSessionDescription(sdpMsg))
-          .then( () => console.log('Add callee sdp'))
+          .then( (stream) => {
+            console.log('Add callee sdp');
+          })
           .catch( err => console.log(`Add callee sdp failed: ${err}`));
         }
       } else if (data.val().ice) {
@@ -207,7 +221,7 @@ export class MediaWDataComponent implements OnInit {
    * callee create answer offer.
    */
   doCreateAnswerOffer() {
-    this.localConnection.createAnswer()
+    this.localConnection.createAnswer(this.offerOpt)
     .then( desc => this.localConnection.setLocalDescription(desc))
     .then( () => {
       this.callee_database.push({
@@ -324,15 +338,6 @@ export class MediaWDataComponent implements OnInit {
     this.localConnection.onicecandidate = this.SendCalleeIceCandidateEvent.bind(this);
     this.localConnection.ontrack = this.addRemoteStreamEvent.bind(this);
 
-    this.GetUserMedia()
-    .then( () => {
-
-      this.doCreateDataChannel();
-
-      this.doCreateAnswerOffer();
-    })
-    .catch( err => console.warn(err));
-
     // check room id exist or not.
     if (this.roomId) {
       if (this.roomId_list.includes(this.roomId)) {
@@ -345,7 +350,17 @@ export class MediaWDataComponent implements OnInit {
 
                 if (sdpMsg.type === 'offer' && sdpMsg.sdp) {
                   // add sdp to setRemoteDescription
-                  this.localConnection.setRemoteDescription(new RTCSessionDescription(sdpMsg));
+                  this.localConnection.setRemoteDescription(new RTCSessionDescription(sdpMsg))
+                    .then( () => {
+                      navigator.mediaDevices.getUserMedia(this.mediaConstraints)
+                      .then( stream => this.$localStream.srcObject = stream)
+                      .then( stream => {
+                        stream.getTracks().forEach( track => {
+                          console.log(track, stream);
+                        });
+                      })
+                      .catch();
+                    });
                   console.log(`Add caller sdp`);
 
                 }
