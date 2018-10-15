@@ -1,3 +1,4 @@
+import { MediaWDataComponent } from './media-w-data/media-w-data.component';
 import { SendMessageComponent } from './send-message/send-message.component';
 import { TryRtcdatachannelComponent } from './try-rtcdatachannel/try-rtcdatachannel.component';
 import { TryRTCPeerConnectionComponent } from './try-rtcpeer-connection/try-rtcpeer-connection.component';
@@ -17,6 +18,10 @@ const routes: Routes = [
   {
     path: 'chatroom',
     component: SendMessageComponent
+  },
+  {
+    path: 'room',
+    component: MediaWDataComponent
   }
 ];
 

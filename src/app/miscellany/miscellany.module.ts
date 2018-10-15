@@ -5,10 +5,11 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { MiscellanyRoutingModule } from './miscellany-routing.module';
 import { TrycodeComponent } from './trycode/trycode.component';
 import { MatButtonModule, MatSelectModule, MatFormFieldModule,
-MatInputModule } from '@angular/material';
+MatInputModule, MatListModule } from '@angular/material';
 import { TryRTCPeerConnectionComponent } from './try-rtcpeer-connection/try-rtcpeer-connection.component';
 import { TryRtcdatachannelComponent } from './try-rtcdatachannel/try-rtcdatachannel.component';
 import { SendMessageComponent } from './send-message/send-message.component';
+import { MediaWDataComponent } from './media-w-data/media-w-data.component';
 
 @NgModule({
   imports: [
@@ -18,11 +19,13 @@ import { SendMessageComponent } from './send-message/send-message.component';
     MatSelectModule,
     MatFormFieldModule,
     MatInputModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    MatListModule
   ],
   declarations: [
     TrycodeComponent, TryRTCPeerConnectionComponent,
     TryRtcdatachannelComponent,
-    SendMessageComponent]
+    SendMessageComponent,
+    MediaWDataComponent]
 })
 export class MiscellanyModule { }

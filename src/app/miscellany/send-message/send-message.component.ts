@@ -81,12 +81,15 @@ export class SendMessageComponent implements OnInit {
     this.closeButton = this.el.nativeElement.querySelector('#closeButton');
     this.joinButton = this.el.nativeElement.querySelector('#joinButton');
     this.inputRoomID = this.el.nativeElement.querySelector('#roomid');
+    setTimeout( () => {
+      this.sendButton.disabled = true;
+      this.closeButton.disabled = true;
+    } , 1000);
 
     this.getRoomList.then(() => console.log(this.roomId_list));
     this.roomidForm = this.fb.group({
       roomid: ['']
     });
-
   }
 
   /**
@@ -94,12 +97,15 @@ export class SendMessageComponent implements OnInit {
    * send id and +sdp to firebast database and waiting remote client.
    */
   createConnection() {
+    this.joinButton.disabled = true;
+    this.inputRoomID.disabled = true;
+    this.startButton.disabled = true;
+    this.sendButton.disabled = false;
+    this.closeButton.disabled = false;
     this.myId = Math.floor(Math.random() * 100000000);
     const localLableName = this.myId;
     this.dataChannelSend.placeholder = '';
     console.log('create connection object localConnection');
-    this.joinButton.disabled = true;
-    this.inputRoomID.disabled = true;
     this.localConnection = new RTCPeerConnection(this.servers);
     this.sendChannel = this.localConnection.createDataChannel('caller');
 
@@ -145,7 +151,10 @@ export class SendMessageComponent implements OnInit {
         console.log(` ${data.val().sender} ice candidate`);
         console.log(data.val().ice);
         this.localConnection.addIceCandidate(new RTCIceCandidate(iceMsg))
-        .then( () => console.log('add callee ice candidate success'))
+        .then( () => {
+          console.log('add callee ice candidate success');
+          this.caller_database.remove();
+        })
         .catch( err => console.log(`add callee ice candidate faile: ${err}`));
       }
     }
@@ -168,6 +177,8 @@ export class SendMessageComponent implements OnInit {
   }
 
   calleeIceCallback(event) {
+    // 當callee 有任何的ice candidate 可以用時，透過firebase database
+    // 把ice candidate 丟到同一個room id內。
     console.warn('callee icecandidate callback');
     console.log(`${window.performance.now() / 1000}
     callee candidate:`);
@@ -209,40 +220,6 @@ export class SendMessageComponent implements OnInit {
         { sender: senderId, ice: data }
       );
     }
-  }
-
-  readMessage(data) {
-    const msg = JSON.parse(data.val().message);
-    const sender = data.val().sender;
-    console.log(`sender: ${sender}`);
-    console.log(`myId: ${this.myId}`);
-    if (sender !== this.myId) {
-      if (msg.ice !== undefined) {
-        console.log(`msg.ice undefined`);
-        this.localConnection.addIceCandidate(new RTCIceCandidate(msg.ice));
-      } else if (msg.sdp.type === 'offer') {
-        /* console.log(`msg.sdp.type === offer`);
-        this.localConnection.setRemoteDescription(
-          new RTCSessionDescription(msg.sdp))
-          .then(() => this.localConnection.createAnswer())
-          .then(answer => {
-            this.localConnection.setLocalDescription(answer);
-          })
-          .then(() => this.sendMessage(
-            this.myId, JSON.stringify({ 'sdp': this.localConnection.localDescription })
-          )); */
-        this.localConnection.onicecandidate = this.getOfferIceCandidate(msg.sdp);
-        this.localConnection.ondatachannel = this.receiveChannelCallback.bind(this);
-      } else if (msg.sdp.type === 'answer') {
-        console.log(`msg.sdp.type === answer`);
-        this.localConnection.setRemoteDescription(
-          new RTCSessionDescription(msg.sdp));
-      }
-    }
-  }
-
-  getAnswerIceCandidate(answerSDP) {
-
   }
 
   /**
@@ -296,10 +273,13 @@ export class SendMessageComponent implements OnInit {
    * 5. enable send button and text area.
    */
   joinChat() {
+    this.startButton.disabled = true;
+
     this.myId = Math.floor(Math.random() * 100000000);
     this.startButton.disabled = true;
     this.callerId = this.roomidForm.value.roomid;
 
+    // check join room id can not be null.
     if (this.callerId) {
       if (this.roomId_list.includes(this.callerId)) {
         this.callee_database = this.db.database.ref('tmp/' + this.callerId);
@@ -314,24 +294,31 @@ export class SendMessageComponent implements OnInit {
                   this.localConnection = new RTCPeerConnection(this.servers);
                   this.localConnection.setRemoteDescription(
                     new RTCSessionDescription(sdpMsg));
+
                   console.log('Add caller sdp');
+
+                  // event binding.
                   this.localConnection.onicecandidate = this.calleeIceCallback.bind(this);
                   this.localConnection.ondatachannel = this.receiveChannelCallback.bind(this);
+
+                  this.localConnection.onopen = () => {
+                    if (this.sendChannel.readyState === 'open') {
+                      console.warn('Data Channel open!');
+                    } else {
+                      console.warn('Data Channel not open.');
+                    }
+                  };
+                  this.localConnection.onclose = () => {
+                    if (this.sendChannel.readyState === 'close') {
+                      console.warn('Data Channel close!');
+                    } else {
+                      console.warn('Data Channel not close.');
+                    }
+                  };
+
                   this.sendChannel = this.localConnection.createDataChannel('callee');
-                  // this.localConnection.onopen = () => {
-                  //   if (this.sendChannel.readyState === 'open') {
-                  //     console.warn('Data Channel open!');
-                  //   } else {
-                  //     console.warn('Data Channel not open.');
-                  //   }
-                  // };
-                  // this.localConnection.onclose = () => {
-                  //   if (this.sendChannel.readyState === 'close') {
-                  //     console.warn('Data Channel close!');
-                  //   } else {
-                  //     console.warn('Data Channel not close.');
-                  //   }
-                  // };
+
+                  // create answer sdp and send to firebase.
                   this.localConnection.createAnswer().then(
                     desc => {
                       console.log('create Anser offer and setlocaldescription.');

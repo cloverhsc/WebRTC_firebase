@@ -1,0 +1,38 @@
+<h1>Realtime communication with WebRTC</h1>
+
+<video id="localstream" autoplay></video>
+<video id="remotestream" autoplay></video>
+
+<ul id="textlist">
+</ul>
+
+<br>
+<mat-form-field>
+  <textarea id="dataChannelSend" disabled matInput placeholder="Press Start, enter some text, then press Send."></textarea>
+</mat-form-field>
+
+<h4> Your room ID: {{myId}} </h4>
+<div id="buttons">
+  <button id="openButton" type="button" mat-raised-button color="primary" (click)="createRoom()">
+    Open Room</button>
+  <button id="sendButton" type="button" (click)="sendData()" mat-raised-button color="primary">Send</button>
+  <button id="closeButton" type="button" (click)="closeDataChannels()" mat-raised-button color="primary">Stop</button>
+</div>
+
+<br>
+
+<div>
+  <form [formGroup]="roomidForm" (ngSubmit)="joinChat()">
+    <mat-form-field>
+      <input matInput type="text" name="roomID" placeholder="room ID" formControlName="roomid" id="roomid">
+    </mat-form-field>
+    <button id="joinButton" type="submit" mat-raised-button color="primary">
+      Join
+    </button>
+
+    <h4>Room list:</h4>
+    <ul>
+      <li *ngFor="let id of roomId_list ">{{id}}</li>
+    </ul>
+  </form>
+</div>
