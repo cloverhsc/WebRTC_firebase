@@ -112,14 +112,10 @@ export class MediaWDataComponent implements OnInit {
     // this.localConnection.ontrack = this.addRemoteStreamEvent.bind(this);
     this.localConnection.onaddstream = (ev) =>  console.warn('caller onaddstream event!');
 
-    this.doCreateDataChannel();
+    // this.doCreateDataChannel();
 
     this.doCreateOffer();
 
-    // this.GetUserMedia()
-    // .then( () => {
-
-    // });
   }
 
   GetUserMedia() {
@@ -200,6 +196,9 @@ export class MediaWDataComponent implements OnInit {
         // find callee sdp info
         const sdpMsg = JSON.parse(data.val().sdp);
         if (sdpMsg.type === 'answer' && sdpMsg.sdp) {
+          console.warn('callee do setRemoteDescription');
+          console.log(sdpMsg);
+          this.localConnection.onaddstream = (ev) => console.warn('caller onaddstream event!');
           this.localConnection.setRemoteDescription( new RTCSessionDescription(sdpMsg))
           .then( (stream) => {
             console.log('Add callee sdp');
@@ -337,52 +336,79 @@ export class MediaWDataComponent implements OnInit {
     this.localConnection = new RTCPeerConnection(this.servers);
     this.localConnection.onicecandidate = this.SendCalleeIceCandidateEvent.bind(this);
     // this.localConnection.ontrack = this.addRemoteStreamEvent.bind(this);
-    this.localConnection.onaddstream = (ev) => console.warn('callee onaddstream event');
+    this.localConnection.onaddstream = (ev) => console.warn('callee onaddtrack event');
 
-    this.doCreateDataChannel();
+    // this.doCreateDataChannel();
 
-    // check room id exist or not.
     if (this.roomId) {
       if (this.roomId_list.includes(this.roomId)) {
-        // get and add caller sdp.
-        if (this.callee_database) {
-          this.callee_database.once('value').then(snapshot => snapshot.forEach(data => {
-            if (data.val().sender !== this.myId) {
-              if (data.val().sdp) {
-                const sdpMsg = JSON.parse(data.val().sdp);
-
-                if (sdpMsg.type === 'offer' && sdpMsg.sdp) {
-                  // add sdp to setRemoteDescription
-                  this.localConnection.setRemoteDescription(new RTCSessionDescription(sdpMsg))
-                    .then( () => {
-                      this.doCreateAnswerOffer();
-                      navigator.mediaDevices.getUserMedia(this.mediaConstraints)
-                      .then( stream => this.$localStream.srcObject = stream)
-                      .catch();
-                    });
-                  console.log(`Add caller sdp`);
-
-                }
-              } else if (data.val().ice) {
-                // Add ice candidate.
-                const iceMsg = JSON.parse(data.val().ice);
-                console.log(`sender id: ${data.val().sender}`);
-                console.log(iceMsg);
-                this.localConnection.addIceCandidate( new RTCIceCandidate(iceMsg))
-                .then( () => console.log(`add caller ice candidate success`))
-                .catch( err => console.warn(`add caller ice candidate error: ${err}`));
+        this.callee_database.on('child_added', (data) => {
+          if (data.val().sender !== this.myId) {
+            if (data.val().sdp) {
+              const sdpMsg = JSON.parse(data.val().sdp);
+              this.localConnection.onaddstream = (ev) => console.warn('callee onaddtrack event');
+              if (sdpMsg.type === 'offer' && sdpMsg.sdp) {
+                console.log('----- callee do setRemoteDescription -----');
+                this.localConnection.setRemoteDescription(new RTCSessionDescription(sdpMsg))
+                .then( () => this.doCreateAnswerOffer())
+                .catch();
               }
+            } else if (data.val().ice) {
+              const iceMsg = JSON.parse(data.val().ice);
+              console.log(`Get caller ice candidate`);
+              console.log(iceMsg);
+              this.localConnection.addIceCandidate(new RTCIceCandidate(iceMsg));
             }
-          }));
-        } else {
-          console.warn('Can not find this room information.');
-        }
-      } else {
-        console.warn('Can not find this room.');
+          }
+        });
       }
-    } else {
-      console.warn('Please input room id.');
     }
+
+    // check room id exist or not.
+    // if (this.roomId) {
+    //   if (this.roomId_list.includes(this.roomId)) {
+    //     // get and add caller sdp.
+    //     if (this.callee_database) {
+    //       this.callee_database.once('value').then(snapshot => snapshot.forEach(data => {
+    //         if (data.val().sender !== this.myId) {
+    //           if (data.val().sdp) {
+    //             const sdpMsg = JSON.parse(data.val().sdp);
+
+    //             if (sdpMsg.type === 'offer' && sdpMsg.sdp) {
+    //               // add sdp to setRemoteDescription
+    //               console.log('----- callee do setRemoteDescription -----');
+    //               console.log(sdpMsg);
+    //               this.localConnection.setRemoteDescription(new RTCSessionDescription(sdpMsg))
+    //                 .then( (event) => {
+    //                   console.log(`Add caller sdp`);
+    //                   this.localConnection.onaddstream = (ev) => console.warn('callee onaddtrack event');
+    //                   navigator.mediaDevices.getUserMedia(this.mediaConstraints)
+    //                     .then(stream => this.$localStream.srcObject = stream)
+    //                     .catch(err => console.log(err));
+    //                   this.doCreateAnswerOffer();
+    //                 });
+
+    //             }
+    //           } else if (data.val().ice) {
+    //             // Add ice candidate.
+    //             const iceMsg = JSON.parse(data.val().ice);
+    //             console.log(`sender id: ${data.val().sender}`);
+    //             console.log(iceMsg);
+    //             this.localConnection.addIceCandidate( new RTCIceCandidate(iceMsg))
+    //             .then( () => console.log(`add caller ice candidate success`))
+    //             .catch( err => console.warn(`add caller ice candidate error: ${err}`));
+    //           }
+    //         }
+    //       }));
+    //     } else {
+    //       console.warn('Can not find this room information.');
+    //     }
+    //   } else {
+    //     console.warn('Can not find this room.');
+    //   }
+    // } else {
+    //   console.warn('Please input room id.');
+    // }
   }
 
   /**
