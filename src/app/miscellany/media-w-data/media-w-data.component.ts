@@ -110,7 +110,7 @@ export class MediaWDataComponent implements OnInit {
     this.localConnection = new RTCPeerConnection(this.servers);
     this.localConnection.onicecandidate = this.SendCallerIceCandidateEvent.bind(this);
     // this.localConnection.ontrack = this.addRemoteStreamEvent.bind(this);
-    this.localConnection.onaddstream = this.addRemoteStreamEvent.bind(this);
+    this.localConnection.onaddstream = (ev) =>  console.warn('caller onaddstream event!');
 
     this.doCreateDataChannel();
 
@@ -336,7 +336,10 @@ export class MediaWDataComponent implements OnInit {
 
     this.localConnection = new RTCPeerConnection(this.servers);
     this.localConnection.onicecandidate = this.SendCalleeIceCandidateEvent.bind(this);
-    this.localConnection.ontrack = this.addRemoteStreamEvent.bind(this);
+    // this.localConnection.ontrack = this.addRemoteStreamEvent.bind(this);
+    this.localConnection.onaddstream = (ev) => console.warn('callee onaddstream event');
+
+    this.doCreateDataChannel();
 
     // check room id exist or not.
     if (this.roomId) {
@@ -352,13 +355,9 @@ export class MediaWDataComponent implements OnInit {
                   // add sdp to setRemoteDescription
                   this.localConnection.setRemoteDescription(new RTCSessionDescription(sdpMsg))
                     .then( () => {
+                      this.doCreateAnswerOffer();
                       navigator.mediaDevices.getUserMedia(this.mediaConstraints)
                       .then( stream => this.$localStream.srcObject = stream)
-                      .then( stream => {
-                        stream.getTracks().forEach( track => {
-                          console.log(track, stream);
-                        });
-                      })
                       .catch();
                     });
                   console.log(`Add caller sdp`);
