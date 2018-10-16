@@ -45,7 +45,7 @@ export class MediaWDataComponent implements OnInit {
     offerToReceiveAudio: 1,
     offerToReceiveVideo: 1,
     voiceActivityDetection: true,
-    iceRestart: true
+    iceRestart: false
   };
   private servers = {
     'iceServers': [
@@ -109,12 +109,11 @@ export class MediaWDataComponent implements OnInit {
 
     this.localConnection = new RTCPeerConnection(this.servers);
     this.localConnection.onicecandidate = this.SendCallerIceCandidateEvent.bind(this);
-    // this.localConnection.ontrack = this.addRemoteStreamEvent.bind(this);
-    this.localConnection.onaddstream = (ev) =>  console.warn('caller onaddstream event!');
+    this.localConnection.ontrack = this.addRemoteStreamEvent.bind(this);
 
-    // this.doCreateDataChannel();
+    this.doCreateDataChannel();
 
-    this.doCreateOffer();
+    this.GetUserMedia().then( () => this.doCreateOffer()).catch(err => console.log(err));
 
   }
 
@@ -122,6 +121,7 @@ export class MediaWDataComponent implements OnInit {
     return  navigator.mediaDevices.getUserMedia(this.mediaConstraints)
     .then( stream => {
       this.$localStream.srcObject = stream;
+      stream.getTracks().forEach(track => this.localConnection.addTrack(track, stream));
     })
     .catch( error => {
       this.initialBtn();
@@ -155,7 +155,7 @@ export class MediaWDataComponent implements OnInit {
   addRemoteStreamEvent(event) {
     console.warn(`Add remote stream.....`);
     console.log(event.stream);
-    this.$remoteStream.srcObject = event.stream[0];
+    this.$remoteStream.srcObject = event.streams[0];
     this.$closeButton.disabled = false;
   }
 
@@ -170,8 +170,8 @@ export class MediaWDataComponent implements OnInit {
       return this.localConnection.setLocalDescription(desc);
     })
     .then( () => {
-      navigator.mediaDevices.getUserMedia(this.mediaConstraints)
-      .then( stream => this.$localStream.srcObject = stream);
+      this.caller_database = this.db.database.ref(this.DB_REF_NAME + this.myId);
+      this.caller_database.on('child_added', this.callerReadMsg.bind(this));
     })
     .then( () => {
       this.sendInfo(
@@ -183,11 +183,7 @@ export class MediaWDataComponent implements OnInit {
       this.$inputMsg.disabled = false;
       this.$sendButton.disabled = false;
     })
-    .then( () => {
-      this.caller_database = this.db.database.ref(this.DB_REF_NAME + this.myId);
-      this.caller_database.on('child_added', this.callerReadMsg.bind(this));
-    })
-      .catch(err => console.warn(err));
+    .catch(err => console.warn(err));
   }
 
   callerReadMsg(data) {
@@ -196,9 +192,9 @@ export class MediaWDataComponent implements OnInit {
         // find callee sdp info
         const sdpMsg = JSON.parse(data.val().sdp);
         if (sdpMsg.type === 'answer' && sdpMsg.sdp) {
-          console.warn('callee do setRemoteDescription');
+          console.warn('caller do setRemoteDescription');
           console.log(sdpMsg);
-          this.localConnection.onaddstream = (ev) => console.warn('caller onaddstream event!');
+
           this.localConnection.setRemoteDescription( new RTCSessionDescription(sdpMsg))
           .then( (stream) => {
             console.log('Add callee sdp');
@@ -232,7 +228,7 @@ export class MediaWDataComponent implements OnInit {
         this.$closeButton.disabled = false;
       });
     })
-      .catch(err => console.warn(err));
+    .catch(err => console.warn(err));
   }
 
   /**
@@ -331,38 +327,35 @@ export class MediaWDataComponent implements OnInit {
     console.log(`room id: ${this.roomId}`);
     console.log(`my id: ${this.myId}`);
 
-    this.callee_database = this.db.database.ref(this.DB_REF_NAME + this.roomId);
-
     this.localConnection = new RTCPeerConnection(this.servers);
     this.localConnection.onicecandidate = this.SendCalleeIceCandidateEvent.bind(this);
     // this.localConnection.ontrack = this.addRemoteStreamEvent.bind(this);
-    this.localConnection.onaddstream = (ev) => console.warn('callee onaddtrack event');
+    this.localConnection.ontrack = this.addRemoteStreamEvent.bind(this);
 
-    // this.doCreateDataChannel();
+    this.callee_database = this.db.database.ref(this.DB_REF_NAME + this.roomId);
 
-    if (this.roomId) {
-      if (this.roomId_list.includes(this.roomId)) {
-        this.callee_database.on('child_added', (data) => {
-          if (data.val().sender !== this.myId) {
-            if (data.val().sdp) {
-              const sdpMsg = JSON.parse(data.val().sdp);
-              this.localConnection.onaddstream = (ev) => console.warn('callee onaddtrack event');
-              if (sdpMsg.type === 'offer' && sdpMsg.sdp) {
-                console.log('----- callee do setRemoteDescription -----');
-                this.localConnection.setRemoteDescription(new RTCSessionDescription(sdpMsg))
-                .then( () => this.doCreateAnswerOffer())
-                .catch();
-              }
-            } else if (data.val().ice) {
-              const iceMsg = JSON.parse(data.val().ice);
-              console.log(`Get caller ice candidate`);
-              console.log(iceMsg);
-              this.localConnection.addIceCandidate(new RTCIceCandidate(iceMsg));
-            }
+    this.callee_database.on('child_added', (data) => {
+      if (data.val().sender !== this.myId) {
+        if (data.val().sdp) {
+          const sdpMsg = JSON.parse(data.val().sdp);
+          if (sdpMsg.type === 'offer' && sdpMsg.sdp) {
+            console.log('----- callee do setRemoteDescription -----');
+            this.localConnection.setRemoteDescription(new RTCSessionDescription(sdpMsg))
+            .then(() => this.GetUserMedia())
+            .then(() => this.doCreateAnswerOffer())
+            .catch(err => console.warn(err));
           }
-        });
+        } else if (data.val().ice) {
+          const iceMsg = JSON.parse(data.val().ice);
+          console.log(`Get caller ice candidate`);
+          console.log(iceMsg);
+          this.localConnection.addIceCandidate(new RTCIceCandidate(iceMsg));
+        }
       }
-    }
+    });
+
+    this.doCreateDataChannel();
+
 
     // check room id exist or not.
     // if (this.roomId) {
