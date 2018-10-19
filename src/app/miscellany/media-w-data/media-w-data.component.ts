@@ -24,9 +24,9 @@ export class MediaWDataComponent implements OnInit {
   public roomId: string;
   public MsgChannelConstrain = null;
   public roomidForm: FormGroup;
+  public myId: string;
 
   private el: ElementRef;
-  private myId: string;
   private $localStream: HTMLVideoElement;
   private $remoteStream: HTMLVideoElement;
   private $openButton: HTMLButtonElement;
